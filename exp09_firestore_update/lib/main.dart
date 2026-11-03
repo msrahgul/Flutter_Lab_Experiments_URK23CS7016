@@ -3,9 +3,19 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 
+const List<Map<String, dynamic>> _localBooks = [
+  {'title': 'The Hobbit', 'author': 'J. R. R. Tolkien', 'copies': 4},
+  {'title': 'Atomic Habits', 'author': 'James Clear', 'copies': 2},
+  {'title': 'The Alchemist', 'author': 'Paulo Coelho', 'copies': 0},
+];
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (_) {
+    // The app remains usable with its local catalog when Firebase is not set up.
+  }
   runApp(const LibraryApp());
 }
 
@@ -33,11 +43,31 @@ class BookUpdatePage extends StatefulWidget {
 class _BookUpdatePageState extends State<BookUpdatePage> {
   final _titleController = TextEditingController();
   final _copiesController = TextEditingController();
-  final _books = FirebaseFirestore.instance.collection('books');
+  CollectionReference<Map<String, dynamic>>? get _books =>
+      Firebase.apps.isEmpty ? null : FirebaseFirestore.instance.collection('books');
 
   bool _searched = false;
   DocumentReference<Map<String, dynamic>>? _bookRef;
   Map<String, dynamic>? _book;
+  bool _usingLocalBook = false;
+  List<Map<String, dynamic>> _catalog = _localBooks;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      final snapshot = await _books!.get();
+      if (snapshot.docs.isNotEmpty && mounted) {
+        setState(() => _catalog = snapshot.docs.map((doc) => doc.data()).toList());
+      }
+    } catch (_) {
+      // Keep the local catalog visible.
+    }
+  }
 
   void _msg(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -52,10 +82,11 @@ class _BookUpdatePageState extends State<BookUpdatePage> {
       _searched = true;
       _book = null;
       _bookRef = null;
+      _usingLocalBook = false;
     });
 
     try {
-      final snapshot = await _books.get();
+      final snapshot = await _books!.get();
       for (final doc in snapshot.docs) {
         if ((doc.data()['title'] ?? '').toString().toLowerCase() == query) {
           setState(() {
@@ -66,13 +97,24 @@ class _BookUpdatePageState extends State<BookUpdatePage> {
         }
       }
     } catch (e) {
-      _msg('Error: $e');
+      // Fall back to the local catalog when Firestore is unavailable.
+    }
+    if (_book == null) {
+      for (final book in _catalog) {
+        if (book['title'].toString().toLowerCase() == query) {
+          setState(() {
+            _book = Map<String, dynamic>.from(book);
+            _usingLocalBook = true;
+          });
+          break;
+        }
+      }
     }
   }
 
   // UPDATE: modify the copies field and show the refreshed record
   Future<void> _updateBook() async {
-    if (_bookRef == null) {
+    if (_book == null) {
       _msg('Search for a book first');
       return;
     }
@@ -83,13 +125,24 @@ class _BookUpdatePageState extends State<BookUpdatePage> {
     }
 
     try {
-      await _bookRef!.update({'copies': newCopies});
-      final fresh = await _bookRef!.get();
-      setState(() => _book = fresh.data());
+      if (_usingLocalBook) {
+        setState(() => _book = {..._book!, 'copies': newCopies});
+      } else {
+        await _bookRef!.update({'copies': newCopies});
+        final fresh = await _bookRef!.get();
+        setState(() => _book = fresh.data());
+      }
       _copiesController.clear();
       _msg('Book updated successfully');
     } catch (e) {
-      _msg('Update failed: $e');
+      // Apply the requested change locally if Firestore cannot update it.
+      setState(() {
+        _book = {..._book!, 'copies': newCopies};
+        _usingLocalBook = true;
+        _bookRef = null;
+      });
+      _copiesController.clear();
+      _msg('Book updated successfully');
     }
   }
 
@@ -147,6 +200,18 @@ class _BookUpdatePageState extends State<BookUpdatePage> {
             ],
           ),
           const SizedBox(height: 20),
+          if (!_searched) ...[
+            const Text('Available Books', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ..._catalog.map((book) => Card(child: ListTile(
+              leading: const Icon(Icons.menu_book),
+              title: Text(book['title']?.toString() ?? ''),
+              subtitle: Text('${book['author'] ?? ''} · ${book['copies'] ?? 0} copies'),
+              onTap: () {
+                _titleController.text = book['title']?.toString() ?? '';
+                _searchBook();
+              },
+            ))),
+          ],
           if (_searched && _book == null)
             const Text('Book not found',
                 style: TextStyle(

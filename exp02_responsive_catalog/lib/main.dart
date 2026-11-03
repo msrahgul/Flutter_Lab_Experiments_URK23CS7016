@@ -117,7 +117,7 @@ class ProductCard extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                Text('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${product.price.toStringAsFixed(0)}',
+                Text('₹${product.price.toStringAsFixed(0)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.w600, color: Colors.green)),
                 const Spacer(),

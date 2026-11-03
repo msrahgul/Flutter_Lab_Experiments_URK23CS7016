@@ -103,7 +103,7 @@ class _EmployeePageState extends State<EmployeePage> {
                   controller: _salaryController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                      labelText: 'Salary (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹)', border: OutlineInputBorder()),
+                      labelText: 'Salary (₹)', border: OutlineInputBorder()),
                   validator: (v) => double.tryParse(v ?? '') == null
                       ? 'Enter a valid salary'
                       : null,
@@ -150,7 +150,7 @@ class _EmployeePageState extends State<EmployeePage> {
                       leading: const CircleAvatar(child: Icon(Icons.person)),
                       title: Text('${d['name']}'),
                       subtitle: Text('ID: ${d['empId']}  |  ${d['department']}'),
-                      trailing: Text('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${d['salary']}'),
+                      trailing: Text('₹${d['salary']}'),
                     ),
                   );
                 }).toList(),

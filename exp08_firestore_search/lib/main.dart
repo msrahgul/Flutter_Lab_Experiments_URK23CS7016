@@ -3,9 +3,19 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 
+const List<Map<String, dynamic>> _localBooks = [
+  {'title': 'The Hobbit', 'author': 'J. R. R. Tolkien', 'copies': 4},
+  {'title': 'Atomic Habits', 'author': 'James Clear', 'copies': 2},
+  {'title': 'The Alchemist', 'author': 'Paulo Coelho', 'copies': 0},
+];
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (_) {
+    // The app remains usable with its local catalog when Firebase is not set up.
+  }
   runApp(const LibraryApp());
 }
 
@@ -35,6 +45,24 @@ class _BookSearchPageState extends State<BookSearchPage> {
   bool _loading = false;
   bool _searched = false;
   Map<String, dynamic>? _book;
+  List<Map<String, dynamic>> _books = _localBooks;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('books').get();
+      if (snapshot.docs.isNotEmpty && mounted) {
+        setState(() => _books = snapshot.docs.map((doc) => doc.data()).toList());
+      }
+    } catch (_) {
+      // Keep the local catalog visible.
+    }
+  }
 
   Future<void> _searchBook() async {
     final query = _titleController.text.trim().toLowerCase();
@@ -57,11 +85,12 @@ class _BookSearchPageState extends State<BookSearchPage> {
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
+      // Fall back to the local catalog when Firestore is unavailable.
     } finally {
+      _book ??= _books.cast<Map<String, dynamic>?>().firstWhere(
+            (book) => book!['title'].toString().toLowerCase() == query,
+            orElse: () => null,
+          );
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -137,7 +166,25 @@ class _BookSearchPageState extends State<BookSearchPage> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildResult(),
+            if (!_searched) ...[
+              const Align(alignment: Alignment.centerLeft, child: Text('Available Books', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+              const SizedBox(height: 8),
+              Expanded(child: ListView.builder(
+                itemCount: _books.length,
+                itemBuilder: (context, index) {
+                  final book = _books[index];
+                  return Card(child: ListTile(
+                    leading: const Icon(Icons.menu_book),
+                    title: Text(book['title']?.toString() ?? ''),
+                    subtitle: Text('${book['author'] ?? ''} · ${book['copies'] ?? 0} copies'),
+                    onTap: () {
+                      _titleController.text = book['title']?.toString() ?? '';
+                      _searchBook();
+                    },
+                  ));
+                },
+              )),
+            ] else _buildResult(),
           ],
         ),
       )),

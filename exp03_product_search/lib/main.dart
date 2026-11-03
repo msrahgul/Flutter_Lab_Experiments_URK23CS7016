@@ -119,7 +119,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                                 child: Icon(Icons.shopping_bag)),
                             title: Text(p.name),
                             subtitle: Text(p.category),
-                            trailing: Text('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${p.price.toStringAsFixed(0)}',
+                            trailing: Text('₹${p.price.toStringAsFixed(0)}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold)),
                           ),

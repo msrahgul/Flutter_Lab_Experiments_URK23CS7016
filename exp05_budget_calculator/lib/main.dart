@@ -135,7 +135,7 @@ class _BudgetPageState extends State<BudgetPage> {
                   controller: _incomeController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                      labelText: 'Monthly Income (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹)',
+                      labelText: 'Monthly Income (₹)',
                       border: OutlineInputBorder()),
                 ),
               ),
@@ -177,11 +177,11 @@ class _BudgetPageState extends State<BudgetPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Text('Total Income: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${budget.income.toStringAsFixed(2)}'),
+                  Text('Total Income: ₹${budget.income.toStringAsFixed(2)}'),
                   Text(
-                      'Total Expenses: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${budget.totalExpenses.toStringAsFixed(2)}'),
+                      'Total Expenses: ₹${budget.totalExpenses.toStringAsFixed(2)}'),
                   const Divider(),
-                  Text('Remaining Balance: ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${budget.balance.toStringAsFixed(2)}',
+                  Text('Remaining Balance: ₹${budget.balance.toStringAsFixed(2)}',
                       style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -203,7 +203,7 @@ class _BudgetPageState extends State<BudgetPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${e.amount.toStringAsFixed(2)}'),
+                    Text('₹${e.amount.toStringAsFixed(2)}'),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => budget.removeExpense(i),

@@ -6,11 +6,9 @@ Course 24CS2016 - Building Application using Flutter | URK23CS7016
 cd exp07_firestore_employees
 flutter create .      # generates android/ios/web folders (keeps lib/main.dart & pubspec.yaml)
 flutter pub get
-flutter run
+flutter run -d chrome
 ```
 
 ## Firebase setup (required)
-1. Create a project at https://console.firebase.google.com and enable **Firestore Database** (test mode).
-2. Install tools once: `dart pub global activate flutterfire_cli` (and install Firebase CLI, then `firebase login`).
-3. In this folder run `flutterfire configure` and choose your project/platforms. This overwrites `lib/firebase_options.dart`.
-4. No manual data needed - the app creates the `employees` collection when you save.
+
+Follow the repository's [Firebase setup guide](../FIREBASE_SETUP.md) to configure this app and generate its Firebase options. The app creates the `employees` collection when you save an employee.

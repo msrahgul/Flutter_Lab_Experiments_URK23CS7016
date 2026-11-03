@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   sqflite: any
+  sqflite_common_ffi: any
   path: any
 
 dev_dependencies:

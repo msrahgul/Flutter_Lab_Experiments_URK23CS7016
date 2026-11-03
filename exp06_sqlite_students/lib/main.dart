@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'
+    show databaseFactoryFfi, sqfliteFfiInit;
 
 class Student {
   final int? id;
@@ -37,9 +39,9 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDb() async {
-    final path = join(await getDatabasesPath(), 'students.db');
+    final databasePath = path.join(await getDatabasesPath(), 'students.db');
     return openDatabase(
-      path,
+      databasePath,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('CREATE TABLE students('
@@ -67,6 +69,11 @@ class DatabaseHelper {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  if (defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.linux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   runApp(const StudentApp());
 }
 

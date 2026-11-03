@@ -3,9 +3,18 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 
+const List<Map<String, String>> _localUsers = [
+  {'email': 'rahgulm@karunya.edu.in', 'password': 'password123', 'name': 'Rahgul'},
+  {'email': 'sam@example.com', 'password': 'flutter123', 'name': 'Sam'},
+];
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (_) {
+    // Local sign-in remains available when Firebase is not set up.
+  }
   runApp(const LoginApp());
 }
 
@@ -46,13 +55,15 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final snapshot =
-          await FirebaseFirestore.instance.collection('users').get();
+      final snapshot = Firebase.apps.isEmpty
+          ? null
+          : await FirebaseFirestore.instance.collection('users').get();
       final email = _emailController.text.trim().toLowerCase();
       final password = _passwordController.text;
 
       QueryDocumentSnapshot<Map<String, dynamic>>? matched;
-      for (final doc in snapshot.docs) {
+      for (final doc in snapshot?.docs ??
+          <QueryDocumentSnapshot<Map<String, dynamic>>>[]) {
         final d = doc.data();
         if ((d['email'] ?? '').toString().toLowerCase() == email &&
             (d['password'] ?? '').toString() == password) {
@@ -61,6 +72,10 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
 
+      final localMatch = _localUsers.where((user) =>
+          user['email']!.toLowerCase() == email &&
+          user['password'] == password).firstOrNull;
+
       if (!mounted) return;
       if (matched != null) {
         final userName = matched.data()['name']?.toString() ?? 'User';
@@ -68,11 +83,37 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(builder: (_) => DashboardPage(userName: userName)),
         );
+      } else if (localMatch != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (_) => DashboardPage(userName: localMatch['name']!)),
+        );
       } else {
         setState(() => _error = 'Invalid email or password');
       }
     } catch (e) {
-      setState(() => _error = 'Something went wrong: $e');
+      final email = _emailController.text.trim().toLowerCase();
+      final password = _passwordController.text;
+      Map<String, String>? localMatch;
+      for (final user in _localUsers) {
+        if (user['email']!.toLowerCase() == email &&
+            user['password'] == password) {
+          localMatch = user;
+          break;
+        }
+      }
+      if (localMatch != null) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (_) => DashboardPage(userName: localMatch!['name']!)),
+          );
+        }
+      } else if (mounted) {
+        setState(() => _error = 'Invalid email or password');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

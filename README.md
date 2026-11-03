@@ -21,4 +21,5 @@ flutter create .
 flutter pub get
 flutter run
 ```
-Experiments 7-10 also need `flutterfire configure` (see the README inside each folder).
+
+Experiments 7–10 require Firebase project setup. Follow [FIREBASE_SETUP.md](FIREBASE_SETUP.md) to configure Firestore and generate each app's Firebase options.
