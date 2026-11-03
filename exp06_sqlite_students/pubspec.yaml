@@ -1,0 +1,21 @@
+name: exp06_sqlite_students
+description: "24CS2016 Flutter Lab - Exercise 6: Data Persistence using SQLite"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: any
+  path: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true

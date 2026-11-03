@@ -1,0 +1,21 @@
+name: exp07_firestore_employees
+description: "24CS2016 Flutter Lab - Exercise 7: Data Persistence using Cloud Firestore"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: any
+  cloud_firestore: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true
